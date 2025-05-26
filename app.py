@@ -7,7 +7,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 # Import db object and models from models.py
 from models import db, User, Note, Tag
-from forms import RegistrationForm, LoginForm, NoteForm # Import the NoteForm
+from forms import RegistrationForm, LoginForm, NoteForm, SettingsForm # Import the SettingsForm
 
 # Create instance folder if it doesn't exist
 instance_folder_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'instance')
@@ -147,6 +147,39 @@ def user_profile(username):
 def users_list():
     all_users = User.query.order_by(User.username).all()
     return render_template('users_list.html', users=all_users, title="All Users")
+
+
+@app.route('/settings', methods=['GET', 'POST'])
+@login_required
+def settings():
+    form = SettingsForm()
+    if form.validate_on_submit():
+        current_user.name = form.name.data
+        current_user.bio = form.bio.data
+        current_user.web_color = form.web_color.data
+        
+        password_changed = False
+        if form.current_password.data and form.new_password.data:
+            if check_password_hash(current_user.password_hash, form.current_password.data):
+                if form.new_password.data == form.confirm_new_password.data: # Already checked by EqualTo validator, but good for clarity
+                    current_user.password_hash = generate_password_hash(form.new_password.data)
+                    password_changed = True
+                    flash('Your password has been updated.', 'success')
+                # The EqualTo validator handles the mismatch message for confirm_new_password
+            else:
+                flash('Incorrect current password. Password not updated.', 'danger')
+        
+        db.session.commit()
+        if not (form.current_password.data and form.new_password.data and not password_changed): # Avoid double flashing if password failed
+             flash('Your settings have been updated.', 'success')
+        return redirect(url_for('settings'))
+    
+    elif request.method == 'GET':
+        form.name.data = current_user.name
+        form.bio.data = current_user.bio
+        form.web_color.data = current_user.web_color
+        
+    return render_template('settings.html', title='User Settings', form=form)
 
 
 @app.route('/note/<int:note_id>/delete', methods=['POST'])

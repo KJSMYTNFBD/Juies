@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, TextAreaField, SubmitField, BooleanField
-from wtforms.validators import DataRequired, Length, EqualTo, ValidationError
+from wtforms.validators import DataRequired, Length, EqualTo, ValidationError, Optional
 from models import User # To check for existing usernames
 
 class RegistrationForm(FlaskForm):
@@ -31,3 +31,16 @@ class NoteForm(FlaskForm):
     content = TextAreaField('Content', validators=[DataRequired()])
     tags = StringField('Tags (comma-separated)') # Optional
     submit = SubmitField('Save Note')
+
+class SettingsForm(FlaskForm):
+    name = StringField('Name', validators=[DataRequired(), Length(min=2, max=50)])
+    bio = TextAreaField('Bio')
+    web_color = StringField('Preferred Web Color (e.g., #RRGGBB or color name)')
+    
+    current_password = PasswordField('Current Password', validators=[Optional()])
+    new_password = PasswordField('New Password', validators=[Optional(), Length(min=6)])
+    confirm_new_password = PasswordField(
+        'Confirm New Password', 
+        validators=[Optional(), EqualTo('new_password', message='New passwords must match')]
+    )
+    submit = SubmitField('Update Settings')

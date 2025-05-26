@@ -1,33 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Profile of {{ profile_user.username }}</title>
-    <style>
-        body { font-family: sans-serif; margin: 0; background-color: #f0f0f0; color: #333; }
-        .profile-container { 
-            padding: 20px; 
-            margin: 20px auto; 
-            max-width: 900px; 
-            border-radius: 8px; 
-            box-shadow: 0 0 15px rgba(0,0,0,0.2);
-        }
-        .profile-header { border-bottom: 2px solid rgba(0,0,0,0.1); padding-bottom: 15px; margin-bottom: 20px; }
-        .profile-header h1 { margin: 0; }
-        .profile-info p { margin: 5px 0; font-size: 1.1em; }
-        .notes-section h2 { color: #333; border-bottom: 1px solid #ccc; padding-bottom: 10px; }
-        .note-item { border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 5px; background-color: #fdfdfd; }
-        .note-item h3 { margin-top: 0; }
-        .note-item a { text-decoration: none; color: #007bff; }
-        .note-item a:hover { text-decoration: underline; }
-        .no-notes { color: #777; }
-        .back-link { display: inline-block; margin-top: 20px; padding: 10px 15px; background-color: #6c757d; color: white; text-decoration: none; border-radius: 5px; }
-        .back-link:hover { background-color: #5a6268; }
-    </style>
-</head>
-<body>
-    <div class="profile-container" style="background-color: {{ profile_user.web_color | default('#ffffff') }};">
+{% extends "base.html" %}
+
+{% block title %}Profile of {{ profile_user.username }}{% endblock %}
+
+{% block content %}
+    {# Flashed messages are now in base.html #}
+    <div class="profile-container" style="background-color: {{ profile_user.web_color | default('#ffffff') }}; {% if profile_user.web_color and (profile_user.web_color.lower() == 'black' or profile_user.web_color.lower() == '#000000' or profile_user.web_color.lower() == '#000') %}color: white;{% else %}color: #333;{% endif %}">
         <div class="profile-header">
             <h1>Profile of {{ profile_user.username }}</h1>
         </div>
@@ -50,12 +27,10 @@
                         {% if note.content %}
                             <p>{{ note.content[:150] }}{% if note.content|length > 150 %}...{% endif %}</p>
                         {% endif %}
-                        {# Conditional edit/delete links - view_note.html already handles this based on current_user #}
-                        {# However, if we want to be explicit here for profile owner: #}
                         {% if current_user and current_user == profile_user %}
                              <a href="{{ url_for('edit_note', note_id=note.id) }}">Edit</a> | 
                              <form action="{{ url_for('delete_note', note_id=note.id) }}" method="POST" style="display:inline;">
-                                <input type="submit" value="Delete" onclick="return confirm('Are you sure?');" style="background:none; border:none; color:#007bff; padding:0; font-size:inherit; cursor:pointer;">
+                                <input type="submit" value="Delete" onclick="return confirm('Are you sure?');" class="delete-btn-link">
                              </form>
                         {% endif %}
                     </div>
@@ -65,9 +40,13 @@
             {% endif %}
         </div>
         <br>
-        <a href="{{ url_for('users_list') }}" class="back-link">All Users</a>
-        <a href="{{ url_for('dashboard') }}" class="back-link" style="margin-left:10px;">Dashboard</a>
-
+        {# Links to users_list and dashboard are in the navbar now, but can be kept here for convenience if desired #}
+        {# <a href="{{ url_for('users_list') }}" class="back-link">All Users</a> #}
+        {# <a href="{{ url_for('dashboard') }}" class="back-link" style="margin-left:10px;">Dashboard</a> #}
+        {% if request.referrer and request.referrer != request.url %}
+             <a href="{{ request.referrer }}" class="back-link">Back to Previous Page</a>
+        {% else %}
+             <a href="{{ url_for('dashboard') }}" class="back-link">Back to Dashboard</a>
+        {% endif %}
     </div>
-</body>
-</html>
+{% endblock %}

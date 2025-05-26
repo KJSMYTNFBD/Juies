@@ -1,0 +1,423 @@
+/* General Body Styles */
+body {
+    font-family: sans-serif;
+    margin: 0;
+    background-color: #f0f0f0; /* Light grey background for the page */
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* Navigation Bar */
+.navbar {
+    background-color: #333;
+    padding: 10px 20px;
+    color: white;
+}
+
+.nav-container {
+    max-width: 1100px; /* Max width for nav content */
+    margin: 0 auto;    /* Center nav content */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.nav-brand {
+    color: white;
+    text-decoration: none;
+    font-size: 1.5em;
+    font-weight: bold;
+}
+
+.nav-links {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+}
+
+.nav-links li {
+    margin-left: 20px;
+}
+
+.nav-links a {
+    color: white;
+    text-decoration: none;
+    font-size: 1em;
+}
+
+.nav-links a:hover {
+    text-decoration: underline;
+}
+
+/* Main Content Container */
+main.container {
+    flex: 1; /* Allows the main content to grow and push footer down */
+    width: 100%;
+    max-width: 1100px; /* Consistent max-width with navbar */
+    margin: 20px auto; /* Top/bottom margin and centered horizontally */
+    padding: 20px;
+    background-color: #fff; /* White background for content area */
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Form-specific container for login, register, create/edit note, settings */
+.form-container {
+    background-color: #fff; 
+    padding: 20px; 
+    border-radius: 8px; 
+    box-shadow: 0 0 10px rgba(0,0,0,0.1); 
+    max-width: 600px; /* Smaller width for forms */
+    margin: 20px auto; /* Centered */
+}
+
+/* Headings */
+h1, h2 {
+    color: #0056b3; /* Dark blue */
+}
+h1 {
+    border-bottom: 2px solid #eee;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+h2 {
+    border-bottom: 1px solid #eee;
+    padding-bottom: 8px;
+    margin-bottom: 15px;
+}
+
+/* Form Styling */
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+input[type="text"],
+input[type="password"],
+input[type="email"], /* Added for potential future use */
+textarea {
+    width: calc(100% - 22px); /* Account for padding and border */
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+textarea {
+    min-height: 100px;
+}
+
+.errors {
+    color: red;
+    font-size: 0.9em;
+    list-style-type: none;
+    padding-left: 0;
+    margin-top: 5px;
+}
+
+.errors li {
+    margin-bottom: 5px;
+}
+
+.checkbox-group {
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+}
+.checkbox-group input[type="checkbox"] {
+    margin-right: 8px;
+}
+
+/* Buttons */
+.submit-btn {
+    background-color: #007bff; /* Standard blue */
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1em;
+}
+.submit-btn:hover {
+    background-color: #0056b3;
+}
+
+.create-note-link, .users-list-link, .back-link {
+    display: inline-block;
+    margin-bottom: 20px;
+    padding: 10px 15px;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+}
+.create-note-link { background-color: #28a745; /* Green */ }
+.create-note-link:hover { background-color: #218838; }
+
+.users-list-link { background-color: #17a2b8; /* Info blue */ margin-left: 10px; }
+.users-list-link:hover { background-color: #138496; }
+
+.back-link { background-color: #6c757d; /* Grey */ margin-top: 10px;}
+.back-link:hover { background-color: #5a6268; }
+
+
+/* Alert/Flashed Messages (in base.html) */
+.flash-messages-container {
+    width: 100%;
+    max-width: 1100px; /* Match main container width */
+    margin: 0 auto; /* Center it */
+    padding: 0 20px; /* Align with main container padding */
+    box-sizing: border-box; /* Ensure padding doesn't expand it */
+}
+.alert {
+    padding: 15px;
+    margin-top: 15px; /* Space from navbar or top */
+    border: 1px solid transparent;
+    border-radius: 4px;
+    text-align: center;
+}
+.alert-success {
+    color: #155724;
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+}
+.alert-danger {
+    color: #721c24;
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+}
+.alert-info {
+    color: #0c5460;
+    background-color: #d1ecf1;
+    border-color: #bee5eb;
+}
+.alert-warning {
+    color: #856404;
+    background-color: #fff3cd;
+    border-color: #ffeeba;
+}
+
+
+/* Note Item Styling (Dashboard, Notes by Tag, User Profile) */
+.note-item {
+    border: 1px solid #ddd;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+    background-color: #fff; /* Default to white, profile page overrides for its container */
+}
+.note-item h3 {
+    margin-top: 0;
+    color: #333;
+}
+.note-item h3 a {
+    text-decoration: none;
+    color: #0056b3;
+}
+.note-item h3 a:hover {
+    text-decoration: underline;
+}
+.note-item p {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    max-height: 100px; /* For snippets */
+    overflow-y: auto;
+    background-color: #fdfdfd;
+    padding: 10px;
+    border: 1px solid #eee;
+    margin-bottom: 10px;
+}
+.note-meta {
+    font-size: 0.9em;
+    color: #555;
+    margin-bottom: 10px;
+}
+.note-meta a {
+    color: #0056b3;
+    text-decoration: none;
+}
+.note-meta a:hover {
+    text-decoration: underline;
+}
+
+.note-tags {
+    margin-top: 10px;
+    font-size: 0.9em;
+}
+.tag-link {
+    background-color: #e9ecef;
+    color: #495057;
+    padding: 3px 7px;
+    border-radius: 3px;
+    text-decoration: none;
+    margin-right: 5px;
+    font-size: 0.9em;
+}
+.tag-link:hover {
+    background-color: #ced4da;
+    text-decoration: none;
+}
+
+.note-actions a {
+    margin-right: 10px;
+    text-decoration: none;
+    color: #007bff;
+}
+.note-actions a:hover {
+    text-decoration: underline;
+}
+.delete-btn, .delete-btn-link {
+    background-color: #dc3545;
+    color: white;
+    padding: 5px 10px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9em;
+    margin-left: 5px;
+    text-decoration: none; /* For .delete-btn-link if it's an <a> styled as button */
+    display: inline-block; /* For <a> styled as button */
+}
+.delete-btn:hover, .delete-btn-link:hover {
+    background-color: #c82333;
+}
+/* For the form-based delete button in user_profile that was styled like a link */
+.delete-btn-link { 
+    background:none !important; 
+    border:none !important; 
+    color:#007bff !important; 
+    padding:0 !important; 
+    font-size:inherit !important; 
+    cursor:pointer !important;
+    text-decoration: underline !important;
+    margin-left: 0 !important;
+}
+.delete-btn-link:hover {
+    color: #0056b3 !important;
+}
+
+
+.no-notes {
+    color: #777;
+}
+
+/* User Profile Specific */
+.profile-container {
+    padding: 20px;
+    margin: 0 auto; /* No top/bottom margin, uses main.container's margin */
+    border-radius: 8px; /* Already on main.container, but can be here if profile-container is nested differently */
+    /* box-shadow: 0 0 15px rgba(0,0,0,0.2); /* Already on main.container */
+}
+.profile-header {
+    border-bottom: 2px solid rgba(0,0,0,0.1);
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+}
+.profile-header h1 {
+    margin: 0;
+}
+.profile-info p {
+    margin: 5px 0;
+    font-size: 1.1em;
+}
+.notes-section h2 {
+    /* color: #333; /* Default inherited */
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 10px;
+}
+
+/* Users List Specific */
+.user-list-item {
+    padding: 10px 0;
+    border-bottom: 1px solid #eee;
+}
+.user-list-item:last-child {
+    border-bottom: none;
+}
+.user-list-item a {
+    text-decoration: none;
+    color: #007bff;
+    font-weight: bold;
+    font-size: 1.1em;
+}
+.user-list-item a:hover {
+    text-decoration: underline;
+}
+
+/* Settings Page Specific */
+.form-section {
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+}
+.form-section:last-of-type {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+.form-section h2 {
+    font-size: 1.2em;
+    /* color: #333; /* Default inherited */
+    margin-bottom: 15px;
+}
+
+
+/* Footer */
+.footer {
+    text-align: center;
+    padding: 20px;
+    margin-top: 20px; /* Space above footer */
+    background-color: #333;
+    color: white;
+    font-size: 0.9em;
+}
+.footer p {
+    margin: 0;
+}
+
+/* Utility for links that look like buttons */
+.button-link {
+    display: inline-block;
+    padding: 10px 15px;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    text-align: center;
+}
+.button-link-danger {
+    background-color: #dc3545;
+}
+.button-link-danger:hover {
+    background-color: #c82333;
+}
+.button-link-info {
+    background-color: #17a2b8;
+}
+.button-link-info:hover {
+    background-color: #138496;
+}
+.button-link-primary {
+    background-color: #007bff;
+}
+.button-link-primary:hover {
+    background-color: #0056b3;
+}
+.button-link-secondary {
+    background-color: #6c757d;
+}
+.button-link-secondary:hover {
+    background-color: #5a6268;
+}
+.button-link-success {
+     background-color: #28a745;
+}
+.button-link-success:hover {
+    background-color: #218838;
+}
