@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; background-color: #f9f9f9; color: #333; }
+        .container { background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 0 15px rgba(0,0,0,0.1); }
+        h1 { color: #0056b3; }
+        h2 { color: #007bff; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        .note-item { border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 5px; background-color: #fff; }
+        .note-item h3 { margin-top: 0; color: #333; }
+        .note-item p { white-space: pre-wrap; /* Preserve whitespace and newlines */ word-wrap: break-word; /* Break long words */ max-height: 100px; overflow-y: auto; background-color: #fdfdfd; padding: 10px; border: 1px solid #eee;}
+        .note-actions a { margin-right: 10px; text-decoration: none; color: #007bff; }
+        .note-actions a:hover { text-decoration: underline; }
+        .create-note-link { display: inline-block; margin-bottom: 20px; padding: 10px 15px; background-color: #28a745; color: white; text-decoration: none; border-radius: 5px; }
+        .create-note-link:hover { background-color: #218838; }
+        .no-notes { color: #777; }
+        .user-info { text-align: right; margin-bottom: 20px; }
+        .user-info a { color: #dc3545; text-decoration: none; margin-left:15px;}
+        .user-info a:hover { text-decoration: underline; }
+        .alert { padding: 15px; margin-bottom: 20px; border: 1px solid transparent; border-radius: 4px; }
+        .alert-success { color: #155724; background-color: #d4edda; border-color: #c3e6cb; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        {% if current_user and current_user.is_authenticated %}
+            <div class="user-info">
+                Logged in as: <strong>{{ current_user.username }}</strong>
+                (<a href="{{ url_for('logout') }}">Logout</a>)
+            </div>
+            <h1>Welcome, {{ current_user.name if current_user.name else current_user.username }}!</h1>
+        {% else %}
+            <h1>Welcome to Your Notes App</h1>
+            <p><a href="{{ url_for('login') }}">Login</a> or <a href="{{ url_for('register') }}">Register</a> to continue.</p>
+        {% endif %}
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% if current_user and current_user.is_authenticated %}
+            <h2>Your Notes</h2>
+            <a href="{{ url_for('create_note') }}" class="create-note-link">Create New Note</a>
+            <a href="{{ url_for('users_list') }}" class="users-list-link">View All Users</a>
+
+            {% if notes %}
+                {% for note in notes %}
+                    <div class="note-item">
+                        <h3>{{ note.title }}</h3>
+                        {% if note.content %}
+                            <p>{{ note.content[:150] }}{% if note.content|length > 150 %}...{% endif %}</p>
+                        {% endif %}
+                        <small>Last updated: {{ note.updated_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                        {% if note.tags %}
+                            <div class="note-tags">
+                                Tags:
+                                {% for tag in note.tags %}
+                                    <a href="{{ url_for('notes_by_tag', tag_name=tag.name) }}" class="tag-link">{{ tag.name }}</a>{% if not loop.last %}, {% endif %}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <br>
+                        <div class="note-actions">
+                            <a href="{{ url_for('view_note', note_id=note.id) }}">View</a> {# Placeholder for now #}
+                            <a href="{{ url_for('edit_note', note_id=note.id) }}">Edit</a>
+                            <form action="{{ url_for('delete_note', note_id=note.id) }}" method="POST" style="display:inline;">
+                                <input type="submit" value="Delete" onclick="return confirm('Are you sure you want to delete this note?');" class="delete-btn">
+                            </form>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p class="no-notes">You don't have any notes yet. Create one!</p>
+            {% endif %}
+        {% endif %}
+    </div>
+</body>
+</html>

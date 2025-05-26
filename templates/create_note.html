@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create New Note</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; background-color: #f4f4f4; color: #333; }
+        .container { background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); max-width: 600px; margin: auto; }
+        h1 { color: #0056b3; text-align: center; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input[type="text"], textarea {
+            width: calc(100% - 22px); /* Account for padding and border */
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        textarea { min-height: 150px; }
+        .errors { color: red; font-size: 0.9em; list-style-type: none; padding-left: 0; }
+        .errors li { margin-bottom: 5px; }
+        .submit-btn {
+            background-color: #28a745; color: white; padding: 10px 15px; border: none;
+            border-radius: 4px; cursor: pointer; font-size: 1em;
+        }
+        .submit-btn:hover { background-color: #218838; }
+        .back-link { display: block; text-align: center; margin-top: 20px; color: #007bff; text-decoration: none; }
+        .back-link:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Create New Note</h1>
+
+        <form method="POST" action="{{ url_for('create_note') }}">
+            {{ form.hidden_tag() }} {# CSRF token #}
+
+            <div class="form-group">
+                {{ form.title.label }}<br>
+                {{ form.title(size=50) }}<br>
+                {% if form.title.errors %}
+                    <ul class="errors">
+                        {% for error in form.title.errors %}<li>{{ error }}</li>{% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                {{ form.content.label }}<br>
+                {{ form.content(rows=10, cols=50) }}<br>
+                {% if form.content.errors %}
+                    <ul class="errors">
+                        {% for error in form.content.errors %}<li>{{ error }}</li>{% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                {{ form.tags.label }}<br>
+                {{ form.tags(size=50) }}<br>
+                {% if form.tags.errors %}
+                    <ul class="errors">
+                        {% for error in form.tags.errors %}<li>{{ error }}</li>{% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                {{ form.submit(class="submit-btn") }}
+            </div>
+        </form>
+        <a href="{{ url_for('dashboard') }}" class="back-link">Back to Dashboard</a>
+    </div>
+</body>
+</html>

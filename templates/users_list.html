@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Users</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; background-color: #f9f9f9; color: #333; }
+        .container { background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 0 15px rgba(0,0,0,0.1); max-width: 700px; margin: auto; }
+        h1 { color: #0056b3; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        .user-list-item { padding: 10px 0; border-bottom: 1px solid #eee; }
+        .user-list-item:last-child { border-bottom: none; }
+        .user-list-item a { text-decoration: none; color: #007bff; font-weight: bold; font-size: 1.1em; }
+        .user-list-item a:hover { text-decoration: underline; }
+        .back-link { display: inline-block; margin-top: 20px; padding: 10px 15px; background-color: #6c757d; color: white; text-decoration: none; border-radius: 5px; }
+        .back-link:hover { background-color: #5a6268; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>All Users</h1>
+
+        {% if users %}
+            {% for user_item in users %}
+                <div class="user-list-item">
+                    <a href="{{ url_for('user_profile', username=user_item.username) }}">{{ user_item.username }}</a>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>No users found.</p>
+        {% endif %}
+        <br>
+        <a href="{{ url_for('dashboard') }}" class="back-link">Back to Dashboard</a>
+    </div>
+</body>
+</html>
