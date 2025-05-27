@@ -1,49 +1,73 @@
 import pytest
 import os
 import tempfile
+import shutil # For cleaning up temporary data directory
+import pytest
 
 # Adjust the Python path to include the root directory
-# This allows 'from app import app' and 'from models import db' to work
 import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # Now we can import from the main application
-from app import app as flask_app 
-from models import db as sqlalchemy_db, User, Note, Tag # Import all models
+from app import app as flask_app
+import json_store # Import our json_store module
+from user import JsonUser # Import the actual JsonUser class
 
 @pytest.fixture(scope='session')
-def test_app_instance():
+def test_app_instance(tmp_path_factory):
     """
     Creates a Flask app instance for the test session.
-    This is scoped to 'session' to avoid recreating the app for every test function,
-    but the database setup/teardown will be per function or as needed.
+    Uses a temporary directory for JSON data storage.
     """
-    # Use a temporary file for the test database
-    db_fd, db_path = tempfile.mkstemp(suffix='.db')
+    # Create a temporary directory for the data for this test session
+    temp_data_dir = tmp_path_factory.mktemp("data")
     
+    # Monkeypatch json_store's DATA_DIR, USER_DATA_DIR, NOTE_DATA_DIR
+    # This is crucial so that json_store functions use the temp directory
+    original_data_dir = json_store.DATA_DIR
+    original_user_dir = json_store.USER_DATA_DIR
+    original_note_dir = json_store.NOTE_DATA_DIR
+
+    json_store.DATA_DIR = str(temp_data_dir)
+    json_store.USER_DATA_DIR = os.path.join(json_store.DATA_DIR, 'users')
+    json_store.NOTE_DATA_DIR = os.path.join(json_store.DATA_DIR, 'notes')
+
     flask_app.config.update({
         "TESTING": True,
-        "SQLALCHEMY_DATABASE_URI": f"sqlite:///{db_path}",
-        "WTF_CSRF_ENABLED": False, # Disable CSRF for easier form testing
-        "SECRET_KEY": "test_secret_key", # Consistent secret key for tests
-        "LOGIN_DISABLED": False # Ensure login is not disabled unless specifically tested
+        "WTF_CSRF_ENABLED": False,
+        "SECRET_KEY": "test_secret_key",
+        "LOGIN_DISABLED": False
     })
 
     yield flask_app
 
-    os.close(db_fd)
-    os.unlink(db_path)
+    # Teardown: Restore original paths and remove temp directory
+    json_store.DATA_DIR = original_data_dir
+    json_store.USER_DATA_DIR = original_user_dir
+    json_store.NOTE_DATA_DIR = original_note_dir
+    # shutil.rmtree(temp_data_dir) # tmp_path_factory handles cleanup
 
 @pytest.fixture()
 def test_app(test_app_instance):
     """
-    Provides the Flask app with a clean database for each test function.
+    Provides the Flask app instance for each test function.
+    Ensures the temporary data store is initialized for each test.
     """
+    # Ensure data directories are created within the temp_data_dir for each test
+    json_store.init_data_store()
+    
     with test_app_instance.app_context():
-        sqlalchemy_db.create_all()
-        yield test_app_instance # The app itself
-        sqlalchemy_db.session.remove() # Ensure session is closed
-        sqlalchemy_db.drop_all()
+        yield test_app_instance
+    
+    # Clean up files within the temp data store after each test if necessary,
+    # or rely on session-scoped cleanup if that's preferred.
+    # For per-test isolation of data:
+    if os.path.exists(json_store.USER_DATA_DIR):
+        for f in os.listdir(json_store.USER_DATA_DIR):
+            os.remove(os.path.join(json_store.USER_DATA_DIR, f))
+    if os.path.exists(json_store.NOTE_DATA_DIR):
+        for f in os.listdir(json_store.NOTE_DATA_DIR):
+            os.remove(os.path.join(json_store.NOTE_DATA_DIR, f))
 
 
 @pytest.fixture()
@@ -73,29 +97,28 @@ def init_database(test_app):
     # If you need specific pre-populated data for a set of tests, add it here.
     # Example:
     # user = User(username='testuser', password_hash=generate_password_hash('password'))
-    # db.session.add(user)
-    # db.session.commit()
-    yield sqlalchemy_db # Yield the db instance if tests need to use it directly for setup
-    # Teardown is handled by test_app fixture
+    # This fixture is mainly for ensuring the app context is active for tests
+    # that might need it for URL building, etc., even if not directly using db.
     pass
+
 
 @pytest.fixture
 def auth_client(client, test_app):
     """
     Provides a test client that is pre-authenticated with a test user.
-    This is a helper fixture for tests that require a logged-in user.
+    Uses json_store to save the test user.
     """
     from werkzeug.security import generate_password_hash
 
+    user_data = {
+        "username": "testuser",
+        "name": "Test User",
+        "password_hash": generate_password_hash("password"),
+        "note_ids": [] # Initialize with empty notes
+    }
+    # Save user directly using json_store within the app context provided by test_app
     with test_app.app_context():
-        # Create a test user directly in the database
-        test_user = User(
-            username="testuser",
-            name="Test User",
-            password_hash=generate_password_hash("password")
-        )
-        sqlalchemy_db.session.add(test_user)
-        sqlalchemy_db.session.commit()
+        json_store.save_user(user_data)
 
     # Log in the user through the client
     response = client.post('/login', data={

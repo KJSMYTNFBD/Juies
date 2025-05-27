@@ -1,7 +1,8 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, TextAreaField, SubmitField, BooleanField
 from wtforms.validators import DataRequired, Length, EqualTo, ValidationError, Optional
-from models import User # To check for existing usernames
+# Removed: from models import User 
+import json_store # To check for existing usernames
 
 class RegistrationForm(FlaskForm):
     name = StringField('Name', validators=[DataRequired(), Length(min=2, max=50)])
@@ -16,8 +17,8 @@ class RegistrationForm(FlaskForm):
         """
         Custom validator to check if the username already exists.
         """
-        user = User.query.filter_by(username=username.data).first()
-        if user:
+        user_data = json_store.get_user(username.data)
+        if user_data:
             raise ValidationError('That username is already taken. Please choose a different one.')
 
 class LoginForm(FlaskForm):

@@ -5,7 +5,9 @@ from flask_login import current_user
 # Assuming conftest.py is in the same directory or accessible in python path
 # and models.py is in the parent directory.
 # The path adjustment in conftest.py should handle this.
-from models import User, db as sqlalchemy_db # Renamed to avoid conflict with pytest 'db' fixture if any
+# Removed: from models import User, db as sqlalchemy_db
+# Removed: from app import TempUser, TEMP_USERS, TEMP_USER_ID_COUNTER
+import json_store # For checking file system directly
 
 # === Registration Tests ===
 
@@ -29,23 +31,25 @@ def test_successful_registration(client, test_app):
     assert response.status_code == 302 # Should redirect
     assert '/login' in response.location
 
-    with test_app.app_context():
-        user = User.query.filter_by(username='testuser1').first()
-        assert user is not None
-        assert user.name == 'Test User'
-        assert user.bio == 'Test bio'
-        assert user.web_color == '#123456'
-        assert check_password_hash(user.password_hash, 'password123')
+    # Verify user data was saved correctly
+    user_data = json_store.get_user('testuser1')
+    assert user_data is not None
+    assert user_data['name'] == 'Test User'
+    assert user_data['bio'] == 'Test bio'
+    assert user_data['web_color'] == '#123456'
+    assert 'note_ids' in user_data # Should be initialized, likely empty
+    assert check_password_hash(user_data['password_hash'], 'password123')
 
 def test_registration_existing_username(client, test_app):
     """Test registration with an already existing username."""
-    # First, register a user
-    client.post('/register', data={
+    # First, register a user (this will create a user file via the route)
+    initial_user_data = {
         'name': 'Original User',
         'username': 'existinguser',
         'password': 'password123',
         'confirm_password': 'password123'
-    }, follow_redirects=True)
+    }
+    client.post('/register', data=initial_user_data, follow_redirects=True)
 
     # Then, attempt to register another user with the same username
     response = client.post('/register', data={
@@ -58,9 +62,13 @@ def test_registration_existing_username(client, test_app):
     assert response.status_code == 200 # Stays on the registration page
     assert b"That username is already taken." in response.data # Check for error message
 
-    with test_app.app_context():
-        users_count = User.query.filter_by(username='existinguser').count()
-        assert users_count == 1 # Ensure no new user was created with the same username
+    # Verify that only one user file for 'existinguser' exists
+    # This check is implicitly handled by json_store.save_user overwriting if allowed,
+    # but the form validation should prevent this.
+    # We can check the number of users or specific content if needed.
+    all_users = json_store.get_all_users()
+    existing_user_count = sum(1 for u in all_users if u['username'] == 'existinguser')
+    assert existing_user_count == 1
 
 # === Login/Logout Tests ===
 
@@ -72,31 +80,29 @@ def test_login_page_loads(client):
 
 def test_successful_login_logout(client, test_app):
     """Test successful login and then logout."""
-    # 1. Register a user first
-    with test_app.app_context():
-        hashed_password = generate_password_hash('testpass')
-        user = User(username='loginuser', password_hash=hashed_password, name='Login Test')
-        sqlalchemy_db.session.add(user)
-        sqlalchemy_db.session.commit()
+    # 1. Create a user directly using json_store
+    user_to_login_data = {
+        "username": "loginuser",
+        "name": "Login Test",
+        "password_hash": generate_password_hash("testpass"),
+        "note_ids": []
+    }
+    json_store.save_user(user_to_login_data)
 
     # 2. Attempt Login
     response = client.post('/login', data={
         'username': 'loginuser',
         'password': 'testpass'
-    }, follow_redirects=False) # Check redirect before it happens
+    }, follow_redirects=False)
 
     assert response.status_code == 302
-    assert '/dashboard' in response.location 
+    assert '/dashboard' in response.location
 
-    # 2.1. Follow the redirect to check the dashboard and current_user
-    response = client.get(response.location, follow_redirects=True) # Follow the redirect
-    assert response.status_code == 200
-    assert b"Welcome, Login Test!" in response.data # Assuming name is displayed on dashboard
-    
-    # To check current_user, we need to be within a request context or use a helper
-    # A simple way is to check a route that displays username or requires login
-    # The navbar in base.html displays "Logout" if authenticated
-    assert b"Logout</a>" in response.data 
+    # 2.1. Follow the redirect to check the dashboard
+    response_dashboard = client.get(response.location, follow_redirects=True)
+    assert response_dashboard.status_code == 200
+    assert b"Welcome, Login Test!" in response_dashboard.data
+    assert b"Logout</a>" in response_dashboard.data
 
     # 3. Attempt Logout
     response_logout = client.get('/logout', follow_redirects=False)
@@ -106,9 +112,7 @@ def test_successful_login_logout(client, test_app):
     # 3.1 Follow redirect and check if user is logged out
     response_after_logout = client.get(response_logout.location, follow_redirects=True)
     assert response_after_logout.status_code == 200
-    assert b"Login</h1>" in response_after_logout.data # Should be back on login page
-    
-    # Check navbar links again, "Logout" should not be present
+    assert b"Login</h1>" in response_after_logout.data
     assert b"Logout</a>" not in response_after_logout.data
     assert b"Login</a>" in response_after_logout.data
 
@@ -119,23 +123,22 @@ def test_login_invalid_username(client):
         'username': 'nonexistentuser',
         'password': 'password123'
     }, follow_redirects=True)
-
-    assert response.status_code == 200 # Stays on login page
+    assert response.status_code == 200
     assert b"Login Unsuccessful. Please check username and password" in response.data
 
 def test_login_invalid_password(client, test_app):
     """Test login with a valid username but invalid password."""
-    # Register a user
-    with test_app.app_context():
-        hashed_password = generate_password_hash('correctpassword')
-        user = User(username='userwithcorrectpass', password_hash=hashed_password)
-        sqlalchemy_db.session.add(user)
-        sqlalchemy_db.session.commit()
-
+    # Create a user directly using json_store
+    user_data_for_pass_test = {
+        "username": "userwithcorrectpass",
+        "password_hash": generate_password_hash("correctpassword"),
+        "note_ids": []
+    }
+    json_store.save_user(user_data_for_pass_test)
+        
     response = client.post('/login', data={
         'username': 'userwithcorrectpass',
         'password': 'wrongpassword'
     }, follow_redirects=True)
-
-    assert response.status_code == 200 # Stays on login page
+    assert response.status_code == 200
     assert b"Login Unsuccessful. Please check username and password" in response.data
