@@ -1,5 +1,5 @@
 import os
-from datetime import datetime
+from datetime import datetime 
 from flask import Flask, render_template, redirect, url_for, flash, request, abort
 from flask_login import LoginManager, login_user, logout_user, current_user, login_required
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -20,6 +20,11 @@ app.config['SECRET_KEY'] = 'dev_secret_key'
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
+
+@app.context_processor
+def inject_current_year():
+    """Injects the current year into all templates."""
+    return {'current_year': datetime.utcnow().year}
 
 @login_manager.user_loader
 def load_user(user_id): 
@@ -52,7 +57,6 @@ def create_note():
             "title": form.title.data,
             "content": form.content.data,
             "tags": tags,
-            # "created_at" and "updated_at" are handled by json_store.save_note
         }
         
         if json_store.save_note(note_data):
@@ -84,7 +88,6 @@ def edit_note(note_id):
         note_data['title'] = form.title.data
         note_data['content'] = form.content.data
         note_data['tags'] = [tag.strip() for tag in form.tags.data.split(',') if tag.strip()]
-        # "updated_at" is handled by json_store.save_note
         
         if json_store.save_note(note_data):
             flash('Your note has been updated!', 'success')
@@ -187,13 +190,9 @@ def settings():
                  flash('Your settings have been updated.', 'success')
         
         if password_updated_successfully:
-            # current_user object in memory is not automatically updated by changing the store
-            # Re-fetch to update current_user's in-memory state for the current request,
-            # or rely on next request's load_user. For immediate reflection:
             updated_user_session_obj = JsonUser.get(current_user.username)
             if updated_user_session_obj :
                 login_user(updated_user_session_obj, remember=current_user.is_remembered if hasattr(current_user, 'is_remembered') else False)
-
 
         return redirect(url_for('settings'))
     
@@ -204,7 +203,7 @@ def settings():
         
     return render_template('settings.html', title='User Settings', form=form)
 
-@app.route('/note/<string:note_id>/delete', methods=['POST']) # Changed to string:note_id
+@app.route('/note/<string:note_id>/delete', methods=['POST'])
 @login_required
 def delete_note(note_id):
     note_data = json_store.get_note(note_id)
