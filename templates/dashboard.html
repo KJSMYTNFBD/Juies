@@ -20,7 +20,7 @@
                 {% if note.content %}
                     <p>{{ note.content[:150] }}{% if note.content|length > 150 %}...{% endif %}</p>
                 {% endif %}
-                <small>Last updated: {{ note.updated_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                <small>Last updated: {{ note['updated_at'] | datetimeformat }}</small>
                 {% if note.tags %}
                     <div class="note-tags">
                         Tags:

@@ -26,6 +26,17 @@ def inject_current_year():
     """Injects the current year into all templates."""
     return {'current_year': datetime.utcnow().year}
 
+def format_datetime_str(iso_string, fmt='%Y-%m-%d %H:%M'):
+    if not iso_string:
+        return "" 
+    try:
+        dt_object = datetime.fromisoformat(iso_string)
+        return dt_object.strftime(fmt)
+    except ValueError:
+        return iso_string 
+
+app.jinja_env.filters['datetimeformat'] = format_datetime_str
+
 @login_manager.user_loader
 def load_user(user_id): 
     return JsonUser.get(user_id)
